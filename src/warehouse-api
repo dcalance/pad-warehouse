@@ -4,7 +4,7 @@ POST /executequery
     operation : "SELECT",
     table : "tablename"
     columns : [*],
-    conditions : [id < 10],
+    conditions : "id < 10",
     orderby : "column_name",
     limit : "10",
     allow_filtering : true
@@ -14,7 +14,7 @@ Response :
 
 {
     error_code : 0,
-    [
+    results : [
         {
             row1 : "data",
             row2 : "moredata"

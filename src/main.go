@@ -1,13 +1,15 @@
 package main
 
 import (
-	"./cassandra"
-	"./models"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"strings"
+
+	"./cassandra"
+	"./models"
+	"github.com/gorilla/mux"
 )
 
 // our main function
@@ -30,24 +32,63 @@ func ExecuteQuery(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	data.Operation = strings.ToLower(data.Operation)
+	query := createQueryString(data)
 	// fmt.Println(data)
-	switch data.Operation {
-	case "select":
-		// fmt.Println("select")
-		iter := session.Query("SELECT json * FROM test;").Iter()
+	if data.Operation == "select" {
+		iter := session.Query(query).Iter()
 
-		var suka string
-		iter.Scan(&suka)
-		fmt.Println(suka)
+		var row string
+		var resultUnmarshaled []map[string]interface{}
 
-	case "insert":
-		fmt.Println("insert")
-	case "update":
-		fmt.Println("update")
-	case "delete":
-		fmt.Println("delete")
+		for iter.Scan(&row) {
+			rowUnmarshaled := make(map[string]interface{})
+			json.Unmarshal([]byte(row), &rowUnmarshaled)
+			resultUnmarshaled = append(resultUnmarshaled, rowUnmarshaled)
+		}
+		errMessage := iter.Close()
+		var response models.Response
+
+		if errMessage != nil {
+			response.ErrorCode = 1
+			response.ErrorMessage = errMessage.Error()
+		} else {
+			response.ErrorCode = 0
+		}
+		response.Result = resultUnmarshaled
+
+		res, _ := json.Marshal(response)
+		w.Write(res)
+	} else {
+		if data.Operation == "insert" || data.Operation == "update" || data.Operation == "delete" {
+			err := session.Query(query).Exec()
+			fmt.Println(err)
+		} else {
+			fmt.Println("Wrong type of operation.")
+		}
 	}
 
 	// w.WriteHeader(http.StatusBadRequest)
 	// fmt.Fprintln(w, "Welcome!")
+}
+
+func createQueryString(data models.ReqQuery) string {
+	resString := data.Operation + strings.Join(data.Columns, ", ") + " FROM " + data.Table
+	if data.Join != "" {
+		resString += data.Join + " ON " + data.JoinCondition
+	}
+	if data.Conditions != "" {
+		resString += " WHERE " + data.Conditions
+	}
+	if data.Orderby != "" {
+		resString += " ORDER BY " + data.Orderby
+	}
+	if data.Limit != 0 {
+		resString += " LIMIT "
+	}
+	if data.AllowFiltering {
+		resString += " ALLOW FILTERING"
+	}
+	resString += ";"
+	return resString
 }
