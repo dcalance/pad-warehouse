@@ -13,8 +13,8 @@ POST /executequery
 Response : 
 
 {
-    error_code : 0,
-    results : [
+    ErrorMessage : 0,
+    Results : [
         {
             row1 : "data",
             row2 : "moredata"
