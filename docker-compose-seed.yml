@@ -1,0 +1,16 @@
+version: '3'
+services:
+  cassandra:
+    image: "cassandra:latest"
+    ports:
+      - "7000:7000"
+      - "7199:7199"
+    environment:
+      - CASSANDRA_BROADCAST_ADDRESS=127.0.0.1
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - cassandra
+    command: cassandra:9042

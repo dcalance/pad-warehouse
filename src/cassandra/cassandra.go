@@ -6,10 +6,10 @@ import (
 
 var Session *gocql.Session
 
-func Init(clusterIp string) {
+func Init() {
 	var err error
 
-	cluster := gocql.NewCluster(clusterIp)
+	cluster := gocql.NewCluster("cassandra")
 	cluster.Keyspace = "cycling"
 	Session, err = cluster.CreateSession()
 	if err != nil {

@@ -46,10 +46,7 @@ func CreateCrudQueryString(data models.ReqCRUD) string {
 
 	case "insert":
 		resString += " INTO " + data.Table + " (" + strings.Join(data.ColumnsList, ", ") + ") " + " VALUES "
-		for _, element := range data.InsertValues {
-			resString += " (" + strings.Join(element, ", ") + "),"
-		}
-		resString = resString[:len(resString)-1]
+		resString += strings.Join(data.InsertValues, ",")
 		if data.IfNotExists {
 			resString += " IF NOT EXISTS "
 		}

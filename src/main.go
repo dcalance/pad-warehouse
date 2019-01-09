@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"./cassandra"
@@ -21,12 +20,12 @@ var gS = globals.GlobalStates{}
 func main() {
 
 	fmt.Println("app started")
-	cassandra.Init(os.Args[1])
+	cassandra.Init()
 	router := mux.NewRouter()
 	router.HandleFunc("/crudquery", CRUDQuery).Methods("POST")
 	router.HandleFunc("/executequery", ExecuteQuery).Methods("POST")
 	router.HandleFunc("/getstatus", GetStatus).Methods("GET")
-	log.Fatal(http.ListenAndServe(":8000", router))
+	log.Fatal(http.ListenAndServe("127.0.0.1:8000", router))
 }
 
 func CRUDQuery(w http.ResponseWriter, r *http.Request) {
@@ -61,14 +60,17 @@ func CRUDQuery(w http.ResponseWriter, r *http.Request) {
 		byteresp, _ := utils.EncodeResponse(resultUnmarshaled, responseType)
 		response.Result = string(byteresp)
 
-		res, _ := utils.EncodeResponse(&response, responseType)
-		w.Write(res)
+		w.Write(byteresp)
+		w.Header().Set("Content-Type", r.Header.Get("Content-type"))
 	} else {
 		if data.Operation == "insert" || data.Operation == "update" || data.Operation == "delete" {
 			err := session.Query(query).Exec()
+			fmt.Println(query)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				response.ErrorMessage = err.Error()
+				resp, _ := utils.EncodeResponse(response, strings.Split(r.Header.Get("Content-Type"), "/")[1])
+				w.Write(resp)
 				gS.IncrementFQ()
 			}
 		} else {
@@ -114,5 +116,6 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 	}
+	w.Header().Set("Content-Type", "application/"+keys[0])
 	w.Write(response)
 }

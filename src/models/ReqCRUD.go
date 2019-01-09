@@ -15,9 +15,9 @@ type ReqCRUD struct {
 	Limit          int    `xml:"limit" json:"limit"`
 	AllowFiltering bool   `xml:"allowfiltering" json:"allowFiltering"`
 	//insert
-	ColumnsList  []string   `xml:"columnslist" json:"columnsList"`
-	InsertValues [][]string `xml:"insertvalues" json:"insertValues"`
-	IfNotExists  bool       `xml:"ifnotexists" json:"ifNotExists"`
+	ColumnsList  []string `xml:"columnslist" json:"columnsList"`
+	InsertValues []string `xml:"insertvalues" json:"insertValues"`
+	IfNotExists  bool     `xml:"ifnotexists" json:"ifNotExists"`
 	//update
 	ExistsCondition string `xml:"existscondition" json:"existsCondition"`
 	Set             string `xml:"set" json:"set"`
